@@ -118,7 +118,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
-          Once Constructora · Prototipo funcional v0.1
+          Powered by NODO · Prototipo v1.0 · 2026
         </p>
       </div>
     </div>

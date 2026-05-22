@@ -14,6 +14,9 @@ export default function AppLayout() {
         <Header onUploadClick={() => setUploadOpen(true)} />
         <main className="flex-1 overflow-y-auto scrollbar-thin">
           <Outlet />
+          <div className="px-6 py-3 border-t border-gray-100 text-center">
+            <p className="text-xs text-gray-300">Powered by NODO · Prototipo v1.0 · 2026</p>
+          </div>
         </main>
       </div>
       <UploadModal isOpen={uploadOpen} onClose={() => setUploadOpen(false)} />
