@@ -25,24 +25,25 @@ jobs:
       - name: Build producción
         run: npm run build
 
-      - name: Desplegar al servidor vía SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            mkdir -p /var/www/html/once-data-hub
-            rm -rf /var/www/html/once-data-hub/*
+      - name: Configurar llave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copiar archivos al servidor
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: "dist/*"
-          target: "/var/www/html/once-data-hub"
-          strip_components: 1
+      - name: Instalar rsync en runner
+        run: sudo apt-get install -y rsync
+
+      - name: Desplegar al servidor
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            dist/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/once-data-hub/
+
+      - name: Verificar despliegue
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://nodo.host/once-data-hub/)
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then exit 1; fi
